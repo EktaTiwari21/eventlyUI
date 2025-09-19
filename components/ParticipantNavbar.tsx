@@ -2,8 +2,8 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import ProfileDropdown from './ProfileDropdown'; // Import the new component
 
 const ParticipantNavbar = () => {
     const pathname = usePathname();
@@ -28,10 +28,8 @@ const ParticipantNavbar = () => {
                             </Link>
                         ))}
                     </nav>
-                    <div className="flex items-center">
-                        <span className="text-sm mr-3">{user.name}</span>
-                        <Image src={user.avatar} alt="User Avatar" width={32} height={32} className="rounded-full object-cover" />
-                    </div>
+                    {/* Replace the static profile with the interactive dropdown */}
+                    <ProfileDropdown user={user} />
                 </div>
             </div>
         </header>
