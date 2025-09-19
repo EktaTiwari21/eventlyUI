@@ -2,8 +2,6 @@
 
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import Header from "@/components/Header"; // Import Header
-import Footer from "@/components/Footer"; // Import Footer
 import "./globals.css";
 
 const poppins = Poppins({
@@ -17,6 +15,7 @@ export const metadata: Metadata = {
     description: "Your platform for discovering and creating events.",
 };
 
+// This is now a "bare" layout. It does NOT include any navbars or footers.
 export default function RootLayout({
                                        children,
                                    }: Readonly<{
@@ -25,13 +24,7 @@ export default function RootLayout({
     return (
         <html lang="en">
         <body className={`${poppins.variable} font-sans bg-black text-white`}>
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">
-                {children}
-            </main>
-            <Footer />
-        </div>
+        {children}
         </body>
         </html>
     );
