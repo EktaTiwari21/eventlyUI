@@ -1,31 +1,50 @@
-// File: app/layout.tsx
-
+// app/layout.tsx
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+// --- CHANGE 1: We import the new 'Spectral' font ---
+import { Poppins, Space_Grotesk, Stylish, Spectral } from "next/font/google";
 import "./globals.css";
 
 const poppins = Poppins({
-    subsets: ["latin"],
-    weight: ['400', '500', '600', '700'],
-    variable: '--font-poppins'
+  subsets: ["latin"],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins'
 });
 
-export const metadata: Metadata = {
-    title: "Evently",
-    description: "Your platform for discovering and creating events.",
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-space-grotesk'
+});
+
+const stylish = Stylish({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-stylish'
+});
+
+// --- CHANGE 2: We configure the 'Spectral' font ---
+const spectral = Spectral({
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-spectral'
+});
+
+export const metadata = {
+  title: "Evently",
+  description: "Your platform for discovering and creating events.",
 };
 
-// This is now a "bare" layout. It does NOT include any navbars or footers.
 export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
-    children: React.ReactNode;
+  children,
+}: Readonly<{
+  children: React.ReactNode;
 }>) {
-    return (
-        <html lang="en">
-        <body className={`${poppins.variable} font-sans bg-black text-white`}>
+  return (
+    <html lang="en">
+      {/* --- CHANGE 3: We add the 'spectral' font variable to the body --- */}
+      <body className={`${poppins.variable} ${spaceGrotesk.variable} ${stylish.variable} ${spectral.variable} font-sans bg-black text-white`}>
         {children}
-        </body>
-        </html>
-    );
+      </body>
+    </html>
+  );
 }

@@ -1,77 +1,159 @@
-// File: app/(participant)/profile/page.tsx
-"use client";
+'use client';
 
-// We'll reuse our AuthInput for consistency
-import AuthInput from "@/components/AuthInput";
+import { useState, useEffect } from 'react';
+import useUserStore from '@/stores/useUserStore';
+import ImageUploader from '@/components/ImageUploader';
 
-// Simple SVG Icons for the form fields
-const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
-const EmailIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>;
-const PasswordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>;
+const ProfilePage = () => {
+  const { fullName, email, profileImageUrl, setUser } = useUserStore();
 
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+  });
 
-export default function ProfilePage() {
-    // In a real app, this data would come from our user store
-    const user = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: '/images/hero-bg.jpg'
-    };
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
-    return (
-        <div className="p-8">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8">My Profile & Settings</h1>
+  useEffect(() => {
+    setFormData({
+      fullName: fullName,
+      email: email,
+      currentPassword: '',
+      newPassword: '',
+    });
+  }, [fullName, email]);
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
 
-                    {/* Left Column: Avatar and Details */}
-                    <div className="md:col-span-1">
-                        <div className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-xl p-6 text-center shadow-2xl">
-                            <img
-                                src={user.avatar}
-                                alt="User Avatar"
-                                className="w-32 h-32 rounded-full mx-auto mb-4 border-2 border-gray-700 object-cover"
-                            />
-                            <h2 className="text-2xl font-bold text-white">{user.name}</h2>
-                            <p className="text-gray-400 text-sm">{user.email}</p>
-                            <button className="mt-4 w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm">
-                                Change Photo
-                            </button>
-                        </div>
-                    </div>
+  const handleImageSelect = (newImageUrl: string) => {
+    setUser({ profileImageUrl: newImageUrl });
+  };
 
-                    {/* Right Column: Edit Form */}
-                    <div className="md:col-span-2">
-                        <div className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-xl p-8 shadow-2xl">
-                            <form className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
-                                    <AuthInput type="text" placeholder="Your full name" value={user.name} onChange={() => {}} icon={<UserIcon />} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
-                                    <AuthInput type="email" placeholder="Your email address" value={user.email} onChange={() => {}} icon={<EmailIcon />} />
-                                </div>
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUser({
+      fullName: formData.fullName,
+      email: formData.email,
+    });
+    alert('Changes saved successfully!');
+  };
 
-                                <div className="border-t border-gray-800 pt-6">
-                                    <h3 className="text-lg font-semibold text-white mb-4">Change Password</h3>
-                                    <div className="space-y-6">
-                                        <AuthInput type="password" placeholder="Current Password" value="" onChange={() => {}} icon={<PasswordIcon />} />
-                                        <AuthInput type="password" placeholder="New Password" value="" onChange={() => {}} icon={<PasswordIcon />} />
-                                    </div>
-                                </div>
+  return (
+    <div className="bg-black min-h-screen text-white">
+      <div className="container mx-auto px-4 lg:px-20 py-12">
+        <h1 className="text-4xl font-bold mb-10">My Profile & Settings</h1>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-                                <div className="flex justify-end pt-4">
-                                    <button type="submit" className="bg-white text-black font-semibold py-2 px-6 rounded-lg hover:bg-gray-200 transition-colors">
-                                        Save Changes
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+          {/* --- CHANGE 1: Added glassmorphism classes to the profile photo card --- */}
+          <div className="col-span-1 flex flex-col items-center bg-white/5 backdrop-filter backdrop-blur-lg border border-white/10 p-8 rounded-2xl shadow-lg">
+            <ImageUploader
+              currentImageUrl={profileImageUrl}
+              onImageSelect={handleImageSelect}
+            />
+            <h2 className="text-xl font-semibold mt-4">{formData.fullName}</h2>
+            <p className="text-gray-300">{formData.email}</p>
+          </div>
+
+          {/* --- CHANGE 2: Added glassmorphism classes to the form fields card --- */}
+          <div className="col-span-1 lg:col-span-2 bg-white/5 backdrop-filter backdrop-blur-lg border border-white/10 p-8 rounded-2xl shadow-lg">
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-4 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-4 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                />
+              </div>
             </div>
-        </div>
-    );
-}
+
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+              <div className="space-y-6">
+                 <div>
+                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-400 mb-2">Current Password</label>
+                   <div className="relative">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      id="currentPassword"
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-white">
+                          {showCurrentPassword ?
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"></path> :
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24 M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z M2 2l20 20"></path>
+                          }
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-400 mb-2">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      id="newPassword"
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                    />
+                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-white">
+                          {showNewPassword ?
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"></path> :
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24 M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z M2 2l20 20"></path>
+                          }
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-8">
+              <button type="submit" className="bg-white text-black font-bold py-2 px-6 rounded-lg hover:bg-gray-300 transition-colors">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;

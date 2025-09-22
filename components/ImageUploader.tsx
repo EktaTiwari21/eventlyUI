@@ -1,43 +1,69 @@
-// File: components/ImageUploader.tsx
-"use client";
+// components/ImageUploader.tsx
+'use client';
 
-const ImageUploader = () => {
-    return (
-        <div className="w-full">
-            <label htmlFor="event-image" className="block text-gray-300 text-sm font-semibold mb-2">
-                Event Cover Image
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md">
-                <div className="space-y-1 text-center">
-                    <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 48 48"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                    <div className="flex text-sm text-gray-400">
-                        <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer bg-gray-900 rounded-md font-medium text-white hover:text-gray-200 focus-within:outline-none"
-                        >
-                            <span>Upload a file</span>
-                            <input id="file-upload" name="file-upload" type="file" className="sr-only" />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                </div>
-            </div>
-        </div>
-    );
+import React, { useRef, useState } from 'react';
+
+// Define the props for our ImageUploader component
+interface ImageUploaderProps {
+  currentImageUrl?: string; // Optional URL of the current image
+  onImageSelect: (imageUrl: string) => void; // Callback when an image is selected
+}
+
+const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImageUrl, onImageSelect }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // State to hold the URL of the image selected by the user
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+
+  // This function is called when the hidden file input changes (i.e., a file is selected)
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; // Get the first selected file
+    if (file) {
+      const reader = new FileReader(); // FileReader can read the contents of files
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string; // The result is a data URL (base64 string)
+        setSelectedImageUrl(imageUrl); // Update local state for preview
+        onImageSelect(imageUrl); // Call the prop function to pass the URL to the parent
+      };
+      reader.readAsDataURL(file); // Read the file as a data URL
+    }
+  };
+
+  // This function is called when the "Change Photo" button is clicked
+  const handleClick = () => {
+    fileInputRef.current?.click(); // Programmatically click the hidden file input
+  };
+
+  // Determine the image to display: selected first, then current, then fallback
+  const displayImageUrl = selectedImageUrl || currentImageUrl || 'https://via.placeholder.com/150?text=No+Image';
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Display the selected/current image or a placeholder */}
+      <img
+        src={displayImageUrl}
+        alt="Profile"
+        className="w-32 h-32 rounded-full mb-4 object-cover border-2 border-gray-700"
+      />
+
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden" // Keep this input hidden
+        accept="image/*" // Only allow image files
+      />
+
+      {/* Button to trigger the file input */}
+      <button
+        type="button"
+        onClick={handleClick}
+        className="bg-[#1E1E1E] hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg w-full"
+      >
+        Change Photo
+      </button>
+    </div>
+  );
 };
 
 export default ImageUploader;
