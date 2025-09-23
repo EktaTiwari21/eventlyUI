@@ -1,13 +1,11 @@
-// components/NotificationsPanel.tsx
 'use client';
 
 import useUserStore from '@/stores/useUserStore';
 import { useEffect } from 'react';
 
-// A single notification item component for cleaner code
 const NotificationItem = ({ icon, eventName, date, status, statusColor, remaining, isFaded = false }: any) => (
   <div className={`w-full p-6 bg-[#262626]/50 rounded-2xl border border-[#262626] backdrop-blur-sm flex items-center gap-6 ${isFaded ? 'opacity-60' : ''}`}>
-    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
       {icon}
     </div>
     <div className="flex-grow flex flex-col gap-4">
@@ -16,7 +14,7 @@ const NotificationItem = ({ icon, eventName, date, status, statusColor, remainin
           <h3 className="font-space text-lg font-bold leading-7 text-white">{eventName}</h3>
           <p className="font-space text-sm text-[#A3A3A3]">{date}</p>
         </div>
-        <p className={`font-space text-sm font-medium ${remaining === 'Event Ended' ? 'text-[#A3A3A3]' : 'text-white'}`}>{remaining}</p>
+        <p className={`font-space text-sm font-medium text-nowrap pl-4 ${remaining === 'Event Ended' ? 'text-[#A3A3A3]' : 'text-white'}`}>{remaining}</p>
       </div>
       <p className="font-space text-sm">
         <span className={isFaded ? "text-[#A3A3A3]" : "text-white"}>Status Update: </span>
@@ -26,19 +24,15 @@ const NotificationItem = ({ icon, eventName, date, status, statusColor, remainin
   </div>
 );
 
-// The main Notifications Panel component
 const NotificationsPanel = () => {
-  // We get the state and the toggle function from our global store
   const { isNotificationsOpen, toggleNotifications } = useUserStore();
 
-  // This effect prevents the page behind the panel from scrolling
   useEffect(() => {
     if (isNotificationsOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
-    // Cleanup function to reset the style when the component is unmounted
     return () => {
       document.body.style.overflow = 'auto';
     };
@@ -46,25 +40,25 @@ const NotificationsPanel = () => {
 
 
   return (
-    // This is the main container for the slide-over panel and its overlay
     <div
       className={`
         fixed inset-0 z-50 transition-opacity duration-300 ease-in-out
         ${isNotificationsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
       `}
     >
-      {/* Overlay - closes the panel when clicked */}
+      {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50"
         onClick={() => toggleNotifications(false)}
       ></div>
 
-      {/* The actual content panel that slides in from the left */}
+      {/* --- CHANGE: Panel is now positioned on the right and slides in --- */}
       <div
         className={`
-          relative w-full max-w-[673px] h-full bg-black shadow-2xl
+          absolute top-0 right-0 h-full w-full max-w-[673px] bg-black shadow-2xl
           flex flex-col transition-transform duration-300 ease-in-out
-          ${isNotificationsOpen ? 'translate-x-0' : '-translate-x-full'}
+          border-l border-[#262626]
+          ${isNotificationsOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
         {/* Header */}
@@ -83,7 +77,7 @@ const NotificationsPanel = () => {
             remaining="25 days remaining"
             status="Postponed due to weather"
             statusColor="#FACC15"
-            icon={<div className="w-6 h-6 border-2 border-white rounded-sm"></div>} // Placeholder icon
+            icon={<div className="w-6 h-6 border-2 border-white rounded-sm"></div>}
           />
           <NotificationItem
             eventName="Modern Art Exhibition"
@@ -91,7 +85,7 @@ const NotificationsPanel = () => {
             remaining="41 days remaining"
             status="New time announced: 7 PM"
             statusColor="#22D3EE"
-            icon={<div className="w-6 h-6 relative"><div className="w-2 h-4 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-r-2 border-t-2 border-b-2 border-white"></div><div className="w-4 h-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white"></div></div>} // Placeholder
+            icon={<div className="w-6 h-6 relative"><div className="w-2 h-4 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-r-2 border-t-2 border-b-2 border-white"></div><div className="w-4 h-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white"></div></div>}
           />
           <NotificationItem
             eventName="Tech Innovators Summit"
@@ -99,7 +93,7 @@ const NotificationsPanel = () => {
             remaining="79 days remaining"
             status="Tickets available now"
             statusColor="#4ADE80"
-            icon={<div className="w-5 h-4 border-2 border-white rounded-sm"></div>} // Placeholder
+            icon={<div className="w-5 h-4 border-2 border-white rounded-sm"></div>}
           />
           <NotificationItem
             eventName="Indie Rock Night"
@@ -108,7 +102,7 @@ const NotificationsPanel = () => {
             status="Event cancelled"
             statusColor="#EF4444"
             isFaded={true}
-            icon={<div className="w-6 h-6 border-2 border-white rounded-sm"></div>} // Placeholder
+            icon={<div className="w-6 h-6 border-2 border-white rounded-sm"></div>}
           />
         </div>
       </div>

@@ -1,35 +1,53 @@
 // stores/useUserStore.ts
 import { create } from 'zustand';
 
+const initialState = {
+fullName: '',
+email: '',
+profileImageUrl: '',
+isLoggedIn: false,
+};
+
 interface UserState {
-  fullName: string;
-  email: string;
-  profileImageUrl: string;
-  // --- NEW: A state to track if the notifications panel is open ---
-  isNotificationsOpen: boolean;
+fullName: string;
+email: string;
+profileImageUrl: string;
+isLoggedIn: boolean;
+isNotificationsOpen: boolean;
+// --- NEW: State for region selection ---
+selectedRegion: string;
+isRegionModalOpen: boolean;
 }
 
 interface UserActions {
-  setUser: (user: Partial<UserState>) => void;
-  // --- NEW: An action to open, close, or toggle the panel ---
+setUser: (user: Partial<Omit<UserState, 'isLoggedIn'>>) => void;
   toggleNotifications: (isOpen?: boolean) => void;
+  logout: () => void;
+  // --- NEW: Actions for region selection ---
+  setSelectedRegion: (region: string) => void;
+  toggleRegionModal: (isOpen?: boolean) => void;
 }
 
 const useUserStore = create<UserState & UserActions>((set) => ({
-  // Initial default values
-  fullName: 'John Doe',
-  email: 'john.doe@example.com',
-  profileImageUrl: '/images/hero-bg.jpg',
-  isNotificationsOpen: false, // The panel is closed by default
+  ...initialState,
+  isNotificationsOpen: false,
+  // --- NEW: Default values for region state ---
+  selectedRegion: 'Mumbai', // Set a default region
+  isRegionModalOpen: false,   // Modal is closed by default
 
-  // Action to update user data
-  setUser: (user) => set((state) => ({ ...state, ...user })),
+  setUser: (user) => set((state) => ({ ...state, ...user, isLoggedIn: true })),
 
-  // Action to manage the notifications panel visibility
   toggleNotifications: (isOpen) => set((state) => ({
-    // If a boolean is provided (true/false), use it.
-    // Otherwise, just flip the current state (toggle).
     isNotificationsOpen: isOpen !== undefined ? isOpen : !state.isNotificationsOpen
+  })),
+
+  logout: () => set(initialState),
+
+  // --- NEW: Functions to update the region state ---
+  setSelectedRegion: (region) => set({ selectedRegion: region, isRegionModalOpen: false }),
+
+  toggleRegionModal: (isOpen) => set((state) => ({
+    isRegionModalOpen: isOpen !== undefined ? isOpen : !state.isRegionModalOpen
   })),
 }));
 

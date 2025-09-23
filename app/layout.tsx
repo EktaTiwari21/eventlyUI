@@ -1,6 +1,5 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-// --- CHANGE 1: We import the new 'Spectral' font ---
 import { Poppins, Space_Grotesk, Stylish, Spectral } from "next/font/google";
 import "./globals.css";
 
@@ -22,7 +21,6 @@ const stylish = Stylish({
   variable: '--font-stylish'
 });
 
-// --- CHANGE 2: We configure the 'Spectral' font ---
 const spectral = Spectral({
   subsets: ['latin'],
   weight: ['700'],
@@ -41,7 +39,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* --- CHANGE 3: We add the 'spectral' font variable to the body --- */}
       <body className={`${poppins.variable} ${spaceGrotesk.variable} ${stylish.variable} ${spectral.variable} font-sans bg-black text-white`}>
         {children}
       </body>
