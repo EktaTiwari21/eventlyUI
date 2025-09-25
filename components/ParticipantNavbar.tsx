@@ -6,11 +6,10 @@ import Link from 'next/link';
 import ProfileDropdown from './ProfileDropdown';
 import useUserStore from '@/stores/useUserStore';
 
-// --- NEW: The navbar now receives an 'onRegionClick' function ---
 const ParticipantNavbar = ({ onRegionClick }: { onRegionClick: () => void }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  // We only need the notification toggle from the store here now
-  const { toggleNotifications } = useUserStore();
+  // --- CHANGE: We now need 'selectedRegion' to display it ---
+  const { toggleNotifications, selectedRegion } = useUserStore();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,9 +41,16 @@ const ParticipantNavbar = ({ onRegionClick }: { onRegionClick: () => void }) => 
         })}
       </div>
       <div className="flex flex-1 justify-end items-center space-x-4">
-        {/* --- CHANGE: The button is moved here and uses the 'onRegionClick' function --- */}
+        {/* --- CHANGE: The button now displays the region if selected, or "Choose the Region" if not --- */}
         <button onClick={onRegionClick} className="hidden md:flex items-center gap-2 text-gray-300 hover:text-white border border-gray-600 px-3 py-1 rounded-lg">
-          <span>Choose the Region</span>
+          {selectedRegion ? (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <span>{selectedRegion}</span>
+            </>
+          ) : (
+            <span>Choose the Region</span>
+          )}
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transform transition-transform"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <ProfileDropdown />

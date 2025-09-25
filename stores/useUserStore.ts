@@ -14,7 +14,6 @@ email: string;
 profileImageUrl: string;
 isLoggedIn: boolean;
 isNotificationsOpen: boolean;
-// --- NEW: State for region selection ---
 selectedRegion: string;
 isRegionModalOpen: boolean;
 }
@@ -23,7 +22,6 @@ interface UserActions {
 setUser: (user: Partial<Omit<UserState, 'isLoggedIn'>>) => void;
   toggleNotifications: (isOpen?: boolean) => void;
   logout: () => void;
-  // --- NEW: Actions for region selection ---
   setSelectedRegion: (region: string) => void;
   toggleRegionModal: (isOpen?: boolean) => void;
 }
@@ -31,9 +29,9 @@ setUser: (user: Partial<Omit<UserState, 'isLoggedIn'>>) => void;
 const useUserStore = create<UserState & UserActions>((set) => ({
   ...initialState,
   isNotificationsOpen: false,
-  // --- NEW: Default values for region state ---
-  selectedRegion: 'Mumbai', // Set a default region
-  isRegionModalOpen: false,   // Modal is closed by default
+  // --- CHANGE: Default region is now empty ---
+  selectedRegion: '',
+  isRegionModalOpen: false,
 
   setUser: (user) => set((state) => ({ ...state, ...user, isLoggedIn: true })),
 
@@ -43,7 +41,6 @@ const useUserStore = create<UserState & UserActions>((set) => ({
 
   logout: () => set(initialState),
 
-  // --- NEW: Functions to update the region state ---
   setSelectedRegion: (region) => set({ selectedRegion: region, isRegionModalOpen: false }),
 
   toggleRegionModal: (isOpen) => set((state) => ({

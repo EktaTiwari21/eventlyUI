@@ -1,64 +1,110 @@
-// File: app/(organizer)/analytics/page.tsx
+// app/(organizer)/analytics/page.tsx
+'use client';
 
-export default function AnalyticsPage() {
-    // Mock data for the analytics components
-    const topStats = [
-        { label: 'Total Revenue', value: '₹12,45,280' },
-        { label: 'Total Tickets Sold', value: '47,832' },
-        { label: 'Average Attendee Rate', value: '91%', change: '+3%' },
-    ];
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
 
-    const topEvents = [
-        { name: 'Global Tech Summit 2025', revenue: '₹5,60,000' },
-        { name: 'Summer Music Fest', revenue: '₹3,25,000' },
-        { name: 'Art & Design Expo 2024', revenue: '₹1,80,500' },
-    ];
+ChartJS.register(
+  CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler
+);
 
-    return (
-        <div className="p-8">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8">Event Analytics</h1>
+const EventPerformanceCard = ({ name, revenue }: { name: string, revenue: number }) => {
+  const formatCurrency = (amount: number) => {
+     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
+  };
+  return (
+    <div className="bg-black/25 rounded-2xl border border-white/10 backdrop-blur-lg shadow-[0_0_40px_rgba(255,255,255,0.05)] px-5 py-3">
+      <div className="flex justify-between items-center font-junge text-xl text-white">
+        <span>{name}</span>
+        <span>{formatCurrency(revenue)}</span>
+      </div>
+    </div>
+  );
+};
 
-                {/* Top Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    {topStats.map((stat, index) => (
-                        <div key={index} className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-xl p-6 shadow-2xl">
-                            <p className="text-gray-400 text-sm">{stat.label}</p>
-                            <div className="flex items-baseline space-x-2 mt-2">
-                                <p className="text-3xl font-bold text-white">{stat.value}</p>
-                                {stat.change && <p className="text-green-400 font-semibold">{stat.change}</p>}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+const AttendeeRateCard = () => (
+  <div className="bg-black/25 rounded-2xl border border-white/50 backdrop-blur-lg shadow-[0_0_40px_rgba(255,255,255,0.05)] px-6 py-5 text-center">
+    <p className="font-kreon text-2xl">
+      <span className="text-[#A3A3A3]">Attendee’s Rate </span>
+      <span className="text-white">90%</span>
+      <span className="text-[#CDFFDF]"> +3</span>
+    </p>
+  </div>
+);
 
-                {/* Main Chart Placeholder */}
-                <div className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-xl p-6 shadow-2xl mb-8">
-                    <h2 className="text-lg font-semibold mb-4">Revenue Over Time</h2>
-                    <div className="h-80 flex items-center justify-center text-gray-500">
-                        {/* Placeholder for a line chart */}
-                        <svg className="w-full h-full" fill="none" viewBox="0 0 400 200">
-                            <path stroke="rgba(255,255,255,0.1)" strokeWidth="1" d="M 0 180 H 400 M 0 120 H 400 M 0 60 H 400" />
-                            <path stroke="rgba(139, 92, 246, 0.5)" strokeWidth="2" d="M 0 150 C 40 100, 80 120, 120 80 S 200 20, 240 60 S 320 160, 360 120, 400 100" />
-                            <path stroke="rgba(255, 255, 255, 0.4)" strokeWidth="2" d="M 0 100 C 40 140, 80 80, 120 100 S 200 180, 240 140 S 320 40, 360 80, 400 60" />
-                        </svg>
-                    </div>
-                </div>
+const AttendeeDemographicsChart = () => {
+  const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' as const, labels: { color: '#A3A3A3', boxWidth: 10, font: { size: 10 } } }, title: { display: false } }, scales: { y: { ticks: { color: '#A3A3A3', font: { size: 10 } }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }, x: { ticks: { color: '#A3A3A3', font: { size: 10 } }, grid: { display: false } } } };
+  const labels = ['Minors', 'Teenagers', 'Adults', 'Senior Citizen'];
+  const data = { labels, datasets: [ { label: '2024', data: [13.3, 97.48, 24.47, 87.48], backgroundColor: '#999494', borderRadius: 4 }, { label: '2025', data: [47.48, 89.11, 84.09, 60.34], backgroundColor: '#D8C6AE', borderRadius: 4 } ] };
+  return <Bar options={options} data={data} />;
+};
 
-                {/* Top Events List */}
-                <div className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-xl p-6 shadow-2xl">
-                    <h2 className="text-lg font-semibold mb-4">Top Performing Events</h2>
-                    <ul className="divide-y divide-gray-800">
-                        {topEvents.map((event, index) => (
-                            <li key={index} className="py-3 flex justify-between items-center">
-                                <span className="text-white font-medium">{event.name}</span>
-                                <span className="text-gray-300">{event.revenue}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+const TicketsSoldChart = () => {
+  const options = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' as const, labels: { color: '#A3A3A3', usePointStyle: true, boxWidth: 6, font: { size: 10 } } }, title: { display: false } }, scales: { y: { ticks: { color: '#A3A3A3', font: { size: 10 } }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, max: 100 }, x: { ticks: { color: '#A3A3A3', font: { size: 10 } }, grid: { display: false } } }, elements: { line: { tension: 0.4 } } };
+  const labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const data = { labels, datasets: [ { fill: true, label: '2024', data: [65, 59, 80, 81, 56, 55, 40, 62, 75, 88, 91, 110], borderColor: '#8979FF', backgroundColor: 'rgba(137, 121, 255, 0.3)' }, { fill: true, label: '2025', data: [28, 48, 40, 19, 86, 27, 90, 45, 68, 50, 78, 99], borderColor: '#FF928A', backgroundColor: 'rgba(255, 146, 138, 0.3)' } ] };
+  return <Line options={options} data={data} />;
+};
 
+const AnalyticsPage = () => {
+  const topEvents = [
+    { name: 'Tech Conference', revenue: 88590 },
+    { name: 'Music Fest', revenue: 82690 },
+    { name: 'Art & Design Expo', revenue: 180500 },
+  ];
+
+  return (
+    <div className="bg-black min-h-screen text-white">
+      <div className="container mx-auto px-4 lg:px-20 py-12">
+        {/* --- CHANGE: The grid layout is now two main columns --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-12">
+
+          {/* --- Left Column --- */}
+          <div className="space-y-12">
+            {/* Top Performing Events */}
+            <div className="flex flex-col gap-4">
+              <h2 className="font-kreon text-3xl text-center">Top Performing Events</h2>
+              <div className="flex flex-col gap-3">
+                {topEvents.map(event => (<EventPerformanceCard key={event.name} {...event} />))}
+              </div>
             </div>
+
+            {/* Tickets Sold Over Time */}
+            <div className="flex flex-col gap-4">
+              <h2 className="font-kreon text-3xl text-center">Tickets Sold Over Time</h2>
+              <div className="bg-black/20 p-4 rounded-2xl h-[350px] border border-white/10">
+                <TicketsSoldChart />
+              </div>
+            </div>
+          </div>
+
+          {/* --- Right Column --- */}
+          <div className="space-y-12">
+             {/* Attendee's Overview */}
+            <div className="flex flex-col gap-4">
+              <h2 className="font-kreon text-3xl text-center">Attendee’s Overview</h2>
+              <AttendeeRateCard />
+              <div className="bg-black/20 p-4 rounded-2xl h-[250px] border border-white/10">
+                <AttendeeDemographicsChart />
+              </div>
+            </div>
+          </div>
+
         </div>
-    );
-}
+      </div>
+    </div>
+  );
+};
+
+export default AnalyticsPage;
