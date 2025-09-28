@@ -7,8 +7,15 @@ import Link from 'next/link';
 const MyEventsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const allEvents = [ { id: 'gt-2025', name: 'Global Tech Summit 2025', status: 'Published', ticketsSold: 3500, revenue: 57200, }, { id: 'smf-2024', name: 'Summer Music Fest 2024', status: 'Draft', ticketsSold: 0, revenue: 0, }, { id: 'ade-2024', name: 'Art & Design Expo 2024', status: 'Ended', ticketsSold: 8000, revenue: 88000, }, ];
-  const filteredEvents = allEvents.filter(event => event.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const allEvents = [
+    { id: 'gt-2025', name: 'Global Tech Summit 2025', status: 'Published', ticketsSold: 3500, revenue: 57200, },
+    { id: 'smf-2024', name: 'Summer Music Fest 2024', status: 'Draft', ticketsSold: 0, revenue: 0, },
+    { id: 'ade-2024', name: 'Art & Design Expo 2024', status: 'Ended', ticketsSold: 8000, revenue: 88000, },
+  ];
+
+  const filteredEvents = allEvents.filter(event =>
+    event.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleDelete = (eventName: string) => {
     if (window.confirm(`Are you sure you want to delete the event "${eventName}"?`)) {
@@ -17,15 +24,29 @@ const MyEventsPage = () => {
     }
   };
 
-  const getStatusClass = (status: string) => { /* ... */ };
-  const formatCurrency = (amount: number) => { /* ... */ };
+  // --- FIX: Restored the logic for these helper functions ---
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'Published': return 'bg-green-500/20 text-green-400';
+      case 'Draft': return 'bg-yellow-500/20 text-yellow-400';
+      case 'Ended': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+     return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
   return (
     <div className="bg-black min-h-screen text-white">
       <div className="container mx-auto px-4 lg:px-20 py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">My Events</h1>
-          {/* --- CHANGE: This link is updated for the new route --- */}
           <Link href="/organizer/my-events/create" className="bg-white text-black font-bold py-2 px-4 rounded-lg hover:bg-gray-300">
             + Create New Event
           </Link>
@@ -49,7 +70,6 @@ const MyEventsPage = () => {
                   <td className="p-4">{event.ticketsSold.toLocaleString('en-IN')}</td>
                   <td className="p-4">{formatCurrency(event.revenue)}</td>
                   <td className="p-4 flex items-center gap-4">
-                    {/* --- CHANGE: This link is updated for the new route --- */}
                     <Link href={`/organizer/my-events/edit/${event.id}`} title="Edit">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white hover:text-blue-400"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                     </Link>

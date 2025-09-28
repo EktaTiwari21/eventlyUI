@@ -6,9 +6,10 @@ const LandingPage = () => {
     <div className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
+        {/* --- CHANGE: Updated image source to the concert image --- */}
         <img
-          src="/images/hero-bg.jpg"
-          alt="Events background"
+          src="/images/concert-bg.jpg" // Assuming you name the new image 'concert-bg.jpg'
+          alt="Concert crowd with stage lights"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60"></div>
@@ -23,7 +24,6 @@ const LandingPage = () => {
           Your one-stop platform to find exciting experiences or bring your own vision to life.
         </p>
 
-        {/* --- CHANGE: The href now points to /signup --- */}
         <Link
           href="/signup"
           className="mt-8 inline-block bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors"

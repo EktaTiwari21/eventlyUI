@@ -1,22 +1,36 @@
 // app/organizer/profile/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ImageUploader from '@/components/ImageUploader';
+import useUserStore from '@/stores/useUserStore'; // Import the store
 
 const OrganizerProfilePage = () => {
-  // A single state object to manage all form data
+  // --- Get the setUser function from the store ---
+  const { setUser, fullName, email, profileImageUrl } = useUserStore();
+
   const [formData, setFormData] = useState({
-    organizerName: 'My Awesome Events Inc.',
-    bio: 'We host the most exciting tech and music events in the city. Join us for an unforgettable experience!',
-    email: 'contact@awesomeevents.com',
+    organizerName: '',
+    bio: '',
+    email: '',
     currentPassword: '',
     newPassword: '',
     website: 'https://awesomeevents.com',
     twitter: 'https://twitter.com/awesomeevents',
     upiId: 'awesomeevents@upi',
-    logoUrl: '/images/hero-bg.jpg', // Placeholder logo
+    logoUrl: '',
   });
+
+  // Effect to load initial data from the store
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      organizerName: fullName,
+      email: email,
+      logoUrl: profileImageUrl
+    }));
+  }, [fullName, email, profileImageUrl]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -29,6 +43,12 @@ const OrganizerProfilePage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // --- FIX: Update the global store with the new data ---
+    setUser({
+      fullName: formData.organizerName,
+      email: formData.email,
+      profileImageUrl: formData.logoUrl,
+    });
     console.log('Saving Organizer Profile:', formData);
     alert('Profile updated successfully!');
   };
@@ -40,7 +60,6 @@ const OrganizerProfilePage = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* --- Left Column: Public Profile Card --- */}
           <div className="lg:col-span-1 bg-[#121212] p-6 rounded-2xl border border-white/10 h-fit">
             <h2 className="text-xl font-bold mb-4">Public Profile</h2>
             <div className="space-y-4">
@@ -61,9 +80,7 @@ const OrganizerProfilePage = () => {
             </div>
           </div>
 
-          {/* --- Right Column: Settings Cards --- */}
           <div className="lg:col-span-2 flex flex-col gap-8">
-            {/* Account & Security Card */}
             <div className="bg-[#121212] p-6 rounded-2xl border border-white/10">
               <h2 className="text-xl font-bold mb-4">Account & Security</h2>
               <div className="space-y-4">
@@ -84,7 +101,6 @@ const OrganizerProfilePage = () => {
               </div>
             </div>
 
-            {/* Social & Payouts Card */}
             <div className="bg-[#121212] p-6 rounded-2xl border border-white/10">
               <h2 className="text-xl font-bold mb-4">Social & Payouts</h2>
               <div className="space-y-4">
@@ -105,7 +121,6 @@ const OrganizerProfilePage = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-end">
                 <button type="submit" className="bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
                   Save Changes

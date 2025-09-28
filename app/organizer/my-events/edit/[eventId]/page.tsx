@@ -1,15 +1,14 @@
-// app/(organizer)/my-events/edit/[eventId]/page.tsx
+// app/organizer/my-events/edit/[eventId]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ImageUploader from '@/components/ImageUploader';
 
-// In a real application, this data would come from your backend API
 const allEventsData = [
-  { id: 'gt-2025', name: 'Global Tech Summit 2025', description: 'The biggest tech summit of the year.', location: 'San Francisco, CA', date: '2025-11-12', time: '09:00', price: '57200', imageUrl: '/images/hero-bg.jpg' },
-  { id: 'smf-2024', name: 'Summer Music Fest 2024', description: 'Three days of music and fun.', location: 'The Grand Park', date: '2024-08-15', time: '12:00', price: '0', imageUrl: '' },
-  { id: 'ade-2024', name: 'Art & Design Expo 2024', description: 'Explore modern art from global artists.', location: 'Metropolitan Expo Center', date: '2024-07-22', time: '10:00', price: '88000', imageUrl: '' },
+    { id: 'gt-2025', name: 'Global Tech Summit 2025', description: 'The biggest tech summit of the year.', location: 'San Francisco, CA', date: '2025-11-12', time: '09:00', price: '57200', imageUrl: '/images/hero-bg.jpg' },
+    { id: 'smf-2024', name: 'Summer Music Fest 2024', description: 'Three days of music and fun.', location: 'The Grand Park', date: '2024-08-15', time: '12:00', price: '0', imageUrl: '' },
+    { id: 'ade-2024', name: 'Art & Design Expo 2024', description: 'Explore modern art from global artists.', location: 'Metropolitan Expo Center', date: '2024-07-22', time: '10:00', price: '88000', imageUrl: '' },
 ];
 
 
@@ -18,17 +17,8 @@ const EditEventPage = () => {
   const params = useParams();
   const eventId = params.eventId;
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    location: '',
-    date: '',
-    time: '',
-    price: '',
-    imageUrl: '',
-  });
+  const [formData, setFormData] = useState({ name: '', description: '', location: '', date: '', time: '', price: '', imageUrl: '' });
 
-  // --- NEW: This effect finds the event data and pre-fills the form ---
   useEffect(() => {
     if (eventId) {
       const eventToEdit = allEventsData.find(event => event.id === eventId);
@@ -51,7 +41,8 @@ const EditEventPage = () => {
     e.preventDefault();
     console.log('Updating Event:', formData);
     alert('Event updated successfully! (Check console for data)');
-    router.push('/my-events'); // Redirect back to the list after updating
+    // --- FIX: Corrected redirect path ---
+    router.push('/organizer/my-events');
   };
 
   return (
@@ -104,7 +95,8 @@ const EditEventPage = () => {
           </div>
 
           <div className="flex justify-end items-center gap-4 pt-4">
-            <button type="button" onClick={() => router.push('/my-events')} className="bg-gray-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 transition-colors">
+            {/* --- FIX: Corrected redirect path --- */}
+            <button type="button" onClick={() => router.push('/organizer/my-events')} className="bg-gray-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 transition-colors">
               Cancel
             </button>
             <button type="submit" className="bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
