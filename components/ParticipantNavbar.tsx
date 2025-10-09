@@ -8,7 +8,6 @@ import useUserStore from '@/stores/useUserStore';
 
 const ParticipantNavbar = ({ onRegionClick }: { onRegionClick: () => void }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  // --- CHANGE: We now need 'selectedRegion' to display it ---
   const { toggleNotifications, selectedRegion } = useUserStore();
 
   useEffect(() => {
@@ -19,12 +18,12 @@ const ParticipantNavbar = ({ onRegionClick }: { onRegionClick: () => void }) => 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // --- CHANGE: The "History" link has been removed ---
   const links = [
     { href: '/discover', label: 'Discover' },
     { href: '/events', label: 'My Tickets' },
     { href: '/notifications', label: 'Notifications' },
     { href: '/wallet', label: '$ Wallet' },
-    { href: '/history', label: 'History' },
   ];
 
   return (
@@ -41,7 +40,6 @@ const ParticipantNavbar = ({ onRegionClick }: { onRegionClick: () => void }) => 
         })}
       </div>
       <div className="flex flex-1 justify-end items-center space-x-4">
-        {/* --- CHANGE: The button now displays the region if selected, or "Choose the Region" if not --- */}
         <button onClick={onRegionClick} className="hidden md:flex items-center gap-2 text-gray-300 hover:text-white border border-gray-600 px-3 py-1 rounded-lg">
           {selectedRegion ? (
             <>
