@@ -1,107 +1,131 @@
-// app/(public)/signup/page.tsx
-'use client';
+// File: app/(public)/signup/page.tsx
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import useUserStore from '@/stores/useUserStore';
+import { useRouter, useSearchParams } from 'next/navigation';
+import AuthInput from '@/components/AuthInput';
+import { registerUser } from '@/lib/api'; // <-- 1. Import our REAL register function
 
-const SignupPage = () => {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isOrganizer, setIsOrganizer] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
-  const { setUser } = useUserStore();
+// Your SVG icons remain exactly the same
+const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
+const EmailIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>;
+const PasswordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+function SignUpForm() {
+    // All your state and hooks are preserved
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isOrganizer, setIsOrganizer] = useState(false);
+    const [error, setError] = useState(''); // Added for showing backend errors
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-    const role = isOrganizer ? 'organizer' : 'participant';
-    console.log(`Creating account as ${role} for ${fullName}`);
+    // Your useEffect is preserved
+    useEffect(() => {
+        if (searchParams.get('role') === 'organizer') {
+            setIsOrganizer(true);
+        }
+    }, [searchParams]);
 
-    const mockUserResponse = {
-      fullName: fullName,
-      email: email,
-      profileImageUrl: '/images/hero-bg.jpg',
-      role: role,
+    // --- 2. THIS IS THE UPDATED SUBMIT FUNCTION ---
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(''); // Clear previous errors
+
+        // We can add more validation here if needed, e.g., for password length
+
+        try {
+            // Translate the checkbox boolean to the role string the backend expects
+            const backendRole = isOrganizer ? 'Organizer' : 'Attendee';
+
+            // We now call our real backend API
+            const result = await registerUser(name, email, password, backendRole);
+            console.log('Registration successful:', result);
+
+            // On success, we alert the user and redirect them to the login page
+            alert('Account created successfully! Please log in.');
+            router.push('/login');
+
+        } catch (err: any) {
+            console.error('Registration failed:', err.response?.data?.message || err.message);
+            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        }
     };
 
-    setUser(mockUserResponse);
+    // --- 3. YOUR ENTIRE UI REMAINS EXACTLY THE SAME ---
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-black p-4">
+            <div className="w-full max-w-md">
+                <div className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-2xl p-8 shadow-2xl">
+                    <h2 className="text-center text-3xl font-bold text-white mb-2">Create an Account</h2>
+                    <p className="text-center text-gray-400 mb-8">Join the Evently community</p>
 
-    if (role === 'organizer') {
-      router.push('/organizer/dashboard');
-    } else {
-      router.push('/discover');
-    }
-  };
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <AuthInput
+                            type="text"
+                            placeholder="Full Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            icon={<UserIcon />}
+                        />
+                        <AuthInput
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            icon={<EmailIcon />}
+                        />
+                        <AuthInput
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            icon={<PasswordIcon />}
+                        />
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <div className="w-full max-w-md p-8 space-y-6 bg-[#121212] rounded-2xl shadow-lg border border-white/10">
-        <div className="text-center">
-            <h1 className="text-3xl font-bold text-white">Create an Account</h1>
-            <p className="text-gray-400 mt-2">Join the Evently community</p>
+                        <div className="flex items-center">
+                            <input
+                                id="is-organizer"
+                                type="checkbox"
+                                checked={isOrganizer}
+                                onChange={(e) => setIsOrganizer(e.target.checked)}
+                                className="h-4 w-4 bg-gray-700 border-gray-600 text-white focus:ring-white/50 rounded"
+                            />
+                            <label htmlFor="is-organizer" className="ml-2 block text-sm text-gray-300">
+                                I want to create events
+                            </label>
+                        </div>
+
+                        {/* Added to display errors from the backend */}
+                        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+
+                        <button
+                            type="submit"
+                            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                            Create Account
+                        </button>
+                    </form>
+
+                    <p className="text-center text-sm text-gray-400 mt-8">
+                        Already have an account?{' '}
+                        <Link href="/login" className="font-medium text-white hover:underline">
+                            Log In
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    );
+}
 
-          {/* Full Name */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            </div>
-            <input id="fullName" name="fullName" type="text" placeholder="Full Name" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-10 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"/>
-          </div>
-
-          {/* Email */}
-          <div className="relative">
-             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </div>
-            <input id="email" name="email" type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-10 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"/>
-          </div>
-
-          {/* Password */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            </div>
-            <input id="password" name="password" type={showPassword ? 'text' : 'password'} placeholder="Password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-lg p-3 pl-10 pr-10 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"/>
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white">
-              {showPassword ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
-              )}
-            </button>
-          </div>
-
-          {/* Organizer Checkbox */}
-          <div className="flex items-center">
-            <input id="isOrganizer" name="isOrganizer" type="checkbox" checked={isOrganizer} onChange={(e) => setIsOrganizer(e.target.checked)} className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"/>
-            <label htmlFor="isOrganizer" className="ml-2 block text-sm text-gray-300">I want to create events</label>
-          </div>
-
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-
-          <div>
-            <button type="submit" className="w-full py-3 px-4 bg-white text-black font-bold rounded-lg hover:bg-gray-300 transition-colors">
-              Create Account
-            </button>
-          </div>
-        </form>
-        <p className="text-sm text-center text-gray-400">
-          Already have an account?{' '}
-          <Link href="/login" className="font-medium text-blue-400 hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
-};
-
-export default SignupPage;
+// Your Suspense boundary is preserved
+export default function SignUpPage() {
+    return (
+        <Suspense>
+            <SignUpForm />
+        </Suspense>
+    )
+}
