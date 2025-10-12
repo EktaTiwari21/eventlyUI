@@ -3,8 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getMyEvents, deleteEvent } from '@/lib/api'; // <-- 1. Import the new deleteEvent function
+import Image from 'next/image'; // <-- 1. Import the Image component
+import { getMyEvents, deleteEvent } from '@/lib/api';
 
+// --- 2. UPDATE THE INTERFACE TO INCLUDE THE IMAGE ---
 interface IMyEvent {
   _id: string;
   name: string;
@@ -12,6 +14,7 @@ interface IMyEvent {
   status: 'Published' | 'Draft' | 'Ended';
   ticketsSold: number;
   ticketPrice: number;
+  eventImage: string; // The URL from Cloudinary
 }
 
 const MyEventsPage = () => {
@@ -20,7 +23,6 @@ const MyEventsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // We move fetchEvents outside useEffect so handleDelete can call it
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
@@ -42,13 +44,11 @@ const MyEventsPage = () => {
       event.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // --- 2. THIS IS THE UPDATED DELETE FUNCTION ---
   const handleDelete = async (eventId: string, eventName: string) => {
     if (window.confirm(`Are you sure you want to delete the event "${eventName}"?`)) {
       try {
         await deleteEvent(eventId);
         alert(`${eventName} has been deleted successfully.`);
-        // Refresh the event list to show the change
         fetchEvents();
       } catch (err: any) {
         console.error("Failed to delete event:", err);
@@ -57,7 +57,6 @@ const MyEventsPage = () => {
     }
   };
 
-  // Your helper functions are preserved exactly as they were
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'Published': return 'bg-green-500/20 text-green-400';
@@ -94,17 +93,24 @@ const MyEventsPage = () => {
 
           <div className="bg-[#121212] rounded-lg border border-white/10 overflow-x-auto">
             <table className="w-full text-left">
-              <thead><tr><th className="p-4">EVENT NAME</th><th className="p-4">STATUS</th><th className="p-4">TICKETS SOLD</th><th className="p-4">REVENUE</th><th className="p-4">ACTIONS</th></tr></thead>
+              {/* --- 3. ADD THE 'IMAGE' COLUMN TO THE HEADER --- */}
+              <thead><tr><th className="p-4">IMAGE</th><th className="p-4">EVENT NAME</th><th className="p-4">STATUS</th><th className="p-4">TICKETS SOLD</th><th className="p-4">REVENUE</th><th className="p-4">ACTIONS</th></tr></thead>
               <tbody>
               {isLoading ? (
-                  <tr><td colSpan={5} className="text-center p-8 text-gray-400">Loading your events...</td></tr>
+                  <tr><td colSpan={6} className="text-center p-8 text-gray-400">Loading your events...</td></tr>
               ) : error ? (
-                  <tr><td colSpan={5} className="text-center p-8 text-red-500">{error}</td></tr>
+                  <tr><td colSpan={6} className="text-center p-8 text-red-500">{error}</td></tr>
               ) : filteredEvents.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center p-8 text-gray-400">You haven't created any events yet.</td></tr>
+                  <tr><td colSpan={6} className="text-center p-8 text-gray-400">You haven't created any events yet.</td></tr>
               ) : (
                   filteredEvents.map((event) => (
                       <tr key={event._id} className="border-b border-white/10 last:border-b-0">
+                        {/* --- 4. ADD THE IMAGE CELL TO EACH ROW --- */}
+                        <td className="p-4">
+                          <div className="relative w-24 h-16 rounded-md overflow-hidden">
+                            <Image src={event.eventImage || '/images/concert-bg.jpg'} alt={event.name} fill className="object-cover"/>
+                          </div>
+                        </td>
                         <td className="p-4 font-semibold">{event.name}</td>
                         <td className="p-4"><span className={`text-xs font-bold px-2 py-1 rounded-full ${getStatusClass(event.status)}`}>{event.status}</span></td>
                         <td className="p-4">{event.ticketsSold.toLocaleString('en-IN')}</td>
@@ -113,7 +119,6 @@ const MyEventsPage = () => {
                           <Link href={`/organizer/my-events/edit/${event._id}`} title="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white hover:text-blue-400"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                           </Link>
-                          {/* --- 3. UPDATE THE ONCLICK HANDLER --- */}
                           <button onClick={() => handleDelete(event._id, event.name)} title="Delete">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white hover:text-red-500"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                           </button>

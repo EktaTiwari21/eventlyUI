@@ -4,8 +4,10 @@
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { getEventById, purchaseSingleTicket, requestGroupTickets } from '@/lib/api'; // <-- 1. Import new functions
+import { getEventById, purchaseSingleTicket, requestGroupTickets } from '@/lib/api';
 
+// --- THIS IS THE CRITICAL FIX #1 ---
+// The interface now correctly expects 'eventImage' from the backend.
 interface IEventDetails {
     _id: string;
     name: string;
@@ -13,7 +15,7 @@ interface IEventDetails {
     date: string;
     location: string;
     ticketPrice: number;
-    imageUrl: string;
+    eventImage: string; // Corrected from imageUrl
 }
 
 const EventDetailPage = () => {
@@ -23,8 +25,6 @@ const EventDetailPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [quantity, setQuantity] = useState(1);
-
-    // --- 2. ADD STATE FOR FRIEND EMAILS ---
     const [friendEmails, setFriendEmails] = useState<string[]>([]);
 
     useEffect(() => {
@@ -44,7 +44,6 @@ const EventDetailPage = () => {
         }
     }, [eventId]);
 
-    // This effect dynamically adjusts the number of email fields
     useEffect(() => {
         setFriendEmails(Array(Math.max(0, quantity - 1)).fill(''));
     }, [quantity]);
@@ -55,17 +54,13 @@ const EventDetailPage = () => {
         setFriendEmails(updatedEmails);
     };
 
-    // --- 3. THE NEW "BUY TICKETS" HANDLER ---
     const handleBuyTickets = async () => {
         if (!event) return;
-
         try {
             if (quantity === 1) {
-                // Single ticket purchase
                 await purchaseSingleTicket(event._id);
                 alert('Ticket purchased successfully! Check the "My Tickets" tab.');
             } else {
-                // Group ticket reservation
                 const emailsToSubmit = friendEmails.filter(email => email.trim() !== '');
                 if (emailsToSubmit.length !== quantity - 1) {
                     alert('Please fill out all email fields for your friends.');
@@ -83,22 +78,21 @@ const EventDetailPage = () => {
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading Event...</div>;
     }
-
     if (error) {
         return <div className="min-h-screen flex items-center justify-center text-red-500 bg-black">{error}</div>;
     }
-
     if (!event) {
         return <div className="min-h-screen flex items-center justify-center text-white bg-black">Event not found.</div>;
     }
 
     const total = event.ticketPrice * quantity;
 
-    // --- 4. YOUR UI IS PRESERVED, WITH NEW DYNAMIC FIELDS ---
     return (
         <div className="bg-black min-h-screen text-white">
             <div className="relative w-full h-[60vh]">
-                <Image src={event.imageUrl || '/images/concert-bg.jpg'} alt={event.name} fill className="object-cover"/>
+                {/* --- THIS IS THE CRITICAL FIX #2 --- */}
+                {/* We now use the correct 'event.eventImage' field for the src */}
+                <Image src={event.eventImage || '/images/concert-bg.jpg'} alt={event.name} fill className="object-cover"/>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-8 md:p-12 lg:p-20">
                     <h1 className="text-5xl md:text-7xl font-bold font-spectral mb-4">{event.name}</h1>
@@ -126,7 +120,6 @@ const EventDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* --- 5. DYNAMIC EMAIL INPUTS --- */}
                         {quantity > 1 && (
                             <div className="space-y-4 my-4">
                                 <p className="text-sm text-gray-300">Enter your friends' emails to invite them:</p>

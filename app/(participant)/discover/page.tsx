@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import EventCarousel from '@/components/EventCarousel';
-import { getEvents } from '@/lib/api'; // <-- 1. Import our new function
+import { getEvents } from '@/lib/api';
 
 // Define a type for our event data to keep TypeScript happy
 interface IEvent {
@@ -19,18 +19,18 @@ const DiscoverPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 2. Fetch data from the backend when the page loads
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const dataFromBackend = await getEvents();
 
-        // 3. Map the backend data to the format our UI components expect
+        // --- THIS IS THE CRITICAL FIX ---
+        // We now map the backend's 'eventImage' field to our component's 'imageUrl' prop.
         const formattedEvents: IEvent[] = dataFromBackend.map((event: any) => ({
-          id: event._id, // The backend uses _id
-          imageUrl: event.imageUrl || '/images/discover-hero-bg.jpg', // Use a fallback image
-          title: event.name, // The backend uses name
-          category: event.category || 'General', // Use a default category
+          id: event._id,
+          imageUrl: event.eventImage || '/images/discover-hero-bg.jpg', // Use the live image URL
+          title: event.name,
+          category: event.category || 'General',
         }));
 
         setAllEvents(formattedEvents);
@@ -49,7 +49,6 @@ const DiscoverPage = () => {
     fetchEvents();
   }, []); // The empty array ensures this runs only once on mount
 
-  // 4. YOUR ENTIRE UI REMAINS EXACTLY THE SAME
   return (
       <div className="bg-black text-white">
         <div className="relative h-[50vh] flex items-center justify-center">

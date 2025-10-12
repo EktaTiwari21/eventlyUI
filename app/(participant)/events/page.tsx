@@ -4,9 +4,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getMyTickets, acceptTicketInvitation, declineTicketInvitation } from '@/lib/api'; // Import our API functions
+import { getMyTickets, acceptTicketInvitation, declineTicketInvitation } from '@/lib/api';
 
-// Define the shape of our ticket data from the backend
+// --- 1. UPDATE THE INTERFACE ---
+// We now explicitly state that 'event' can be null, and use the correct 'eventImage' field
 interface ITicket {
   _id: string;
   status: 'confirmed' | 'pending_acceptance' | 'used' | 'declined';
@@ -14,8 +15,8 @@ interface ITicket {
     _id: string;
     name: string;
     date: string;
-    imageUrl: string; // Assuming the backend provides an imageUrl for the event
-  };
+    eventImage: string;
+  } | null; // This is the key change to allow for null events
 }
 
 // Your existing UI components are preserved
@@ -51,30 +52,32 @@ const PastTicketCard = ({ eventName, date, imageUrl }: any) => (
     </div>
 );
 
-// This is a new component specifically for invitations
-const InvitationCard = ({ ticket, onAccept, onDecline }: { ticket: ITicket, onAccept: () => void, onDecline: () => void }) => (
-    <div className="bg-blue-900/20 border border-blue-400/30 p-4 rounded-lg flex items-center justify-between shadow-lg">
-      <div className="flex items-center space-x-4">
-        <div className="relative w-20 h-12 rounded-md overflow-hidden">
-          <Image src={ticket.event.imageUrl || '/images/concert-bg.jpg'} alt={ticket.event.name} fill className="object-cover" />
+const InvitationCard = ({ ticket, onAccept, onDecline }: { ticket: ITicket, onAccept: () => void, onDecline: () => void }) => {
+  // Safety check in case an invitation is for a deleted event
+  if (!ticket.event) return null;
+
+  return (
+      <div className="bg-blue-900/20 border border-blue-400/30 p-4 rounded-lg flex items-center justify-between shadow-lg">
+        <div className="flex items-center space-x-4">
+          <div className="relative w-20 h-12 rounded-md overflow-hidden">
+            <Image src={ticket.event.eventImage || '/images/concert-bg.jpg'} alt={ticket.event.name} fill className="object-cover" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">{ticket.event.name}</h3>
+            <p className="text-sm text-gray-400">You have a pending invitation!</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-lg">{ticket.event.name}</h3>
-          <p className="text-sm text-gray-400">You have a pending invitation!</p>
+        <div className="flex gap-2">
+          <button onClick={onDecline} className="bg-red-600/50 hover:bg-red-600/80 text-white font-bold py-2 px-4 rounded-lg text-sm">Decline</button>
+          <button onClick={onAccept} className="bg-green-600/50 hover:bg-green-600/80 text-white font-bold py-2 px-4 rounded-lg text-sm">Accept</button>
         </div>
       </div>
-      <div className="flex gap-2">
-        <button onClick={onDecline} className="bg-red-600/50 hover:bg-red-600/80 text-white font-bold py-2 px-4 rounded-lg text-sm">Decline</button>
-        <button onClick={onAccept} className="bg-green-600/50 hover:bg-green-600/80 text-white font-bold py-2 px-4 rounded-lg text-sm">Accept</button>
-      </div>
-    </div>
-);
+  );
+};
 
 
 const MyTicketsPage = () => {
   const [showPastTickets, setShowPastTickets] = useState(false);
-
-  // State for live data
   const [allTickets, setAllTickets] = useState<ITicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -116,10 +119,14 @@ const MyTicketsPage = () => {
     }
   };
 
-  // Filter the live data
-  const pendingTickets = allTickets.filter(ticket => ticket.status === 'pending_acceptance');
-  const activeTickets = allTickets.filter(ticket => ticket.status === 'confirmed' && new Date(ticket.event.date) >= new Date());
-  const pastTickets = allTickets.filter(ticket => ticket.status === 'used' || (ticket.status === 'confirmed' && new Date(ticket.event.date) < new Date()));
+  // --- 2. THIS IS THE CRITICAL FIX ---
+  // First, we create a clean list of tickets that definitely have an event attached.
+  const validTickets = allTickets.filter(ticket => ticket.event);
+
+  // Then, we perform our filtering on this clean list, preventing any crashes.
+  const pendingTickets = validTickets.filter(ticket => ticket.status === 'pending_acceptance');
+  const activeTickets = validTickets.filter(ticket => ticket.event && ticket.status === 'confirmed' && new Date(ticket.event.date) >= new Date());
+  const pastTickets = validTickets.filter(ticket => ticket.event && (ticket.status === 'used' || ticket.status === 'declined' || (ticket.status === 'confirmed' && new Date(ticket.event.date) < new Date())));
 
   if (isLoading) {
     return <div className="bg-black min-h-screen text-white text-center py-20">Loading tickets...</div>;
@@ -139,7 +146,6 @@ const MyTicketsPage = () => {
             </button>
           </div>
 
-          {/* New Invitations Section */}
           {pendingTickets.length > 0 && (
               <div className="mb-12">
                 <h2 className="text-2xl font-semibold mb-6">Pending Invitations</h2>
@@ -162,10 +168,10 @@ const MyTicketsPage = () => {
                 {activeTickets.map(ticket => (
                     <TicketCard
                         key={ticket._id}
-                        eventName={ticket.event.name}
-                        date={new Date(ticket.event.date).toLocaleDateString()}
-                        eventId={ticket.event._id}
-                        imageUrl={ticket.event.imageUrl}
+                        eventName={ticket.event!.name}
+                        date={new Date(ticket.event!.date).toLocaleDateString()}
+                        eventId={ticket.event!._id}
+                        imageUrl={ticket.event!.eventImage}
                     />
                 ))}
               </div>
@@ -178,7 +184,7 @@ const MyTicketsPage = () => {
                 <h2 className="text-2xl font-semibold mb-6">Past Tickets</h2>
                 {pastTickets.length > 0 ? (
                     <div className="space-y-4">
-                      {pastTickets.map(ticket => ( <PastTicketCard key={ticket._id} eventName={ticket.event.name} date={new Date(ticket.event.date).toLocaleDateString()} imageUrl={ticket.event.imageUrl} /> ))}
+                      {pastTickets.map(ticket => ( <PastTicketCard key={ticket._id} eventName={ticket.event!.name} date={new Date(ticket.event!.date).toLocaleDateString()} imageUrl={ticket.event!.eventImage} /> ))}
                     </div>
                 ) : (
                     <p className="text-gray-500">You have no past tickets.</p>

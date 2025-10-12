@@ -105,16 +105,33 @@ export const submitKyc = async (kycData: KycData) => {
     return response.data;
 }
 
-// --- THESE ARE THE NEW FUNCTIONS FOR THE NOTIFICATIONS PAGE ---
-
-// Fetches all notifications for the logged-in user
 export const getMyNotifications = async () => {
     const response = await API.get('/notifications');
     return response.data;
 };
 
-// Marks all of the user's notifications as read
 export const markNotificationsAsRead = async () => {
     const response = await API.put('/notifications/read');
+    return response.data;
+};
+
+export const getRecentActivities = async () => {
+    const response = await API.get('/activities');
+    return response.data;
+}
+
+export const suggestImages = async (searchTerm: string) => {
+    const response = await API.get(`/ai/suggest-images?searchTerm=${encodeURIComponent(searchTerm)}`);
+    return response.data;
+};
+
+export const trackUnsplashDownload = async (downloadUrl: string) => {
+    const response = await API.post('/ai/track-download', { downloadUrl });
+    return response.data;
+};
+
+// --- THIS IS THE NEW FUNCTION FOR AI IMAGE GENERATION ---
+export const generateImage = async (prompt: string) => {
+    const response = await API.post('/ai/generate-image', { prompt });
     return response.data;
 };

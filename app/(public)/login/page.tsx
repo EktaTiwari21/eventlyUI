@@ -5,36 +5,32 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import useUserStore from '@/stores/useUserStore';
-import { loginUser } from '@/lib/api'; // <-- 1. Import our REAL login function
+import { loginUser } from '@/lib/api';
 
 const LoginPage = () => {
-  // All your state and hooks are preserved
+  // --- 1. THE UNNECESSARY 'role' STATE IS REMOVED ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('participant'); // This is still useful for the UI
   const [error, setError] = useState('');
   const router = useRouter();
   const { setUser } = useUserStore();
 
-  // --- 2. THIS IS THE UPDATED SUBMIT FUNCTION ---
+  // The handleSubmit function is already perfect and needs no changes
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      // We now call our real backend API
       const userData = await loginUser(email, password);
       console.log('Backend login successful:', userData);
 
-      // Update the global store with the REAL user data from the API
       setUser({
         fullName: userData.name,
         email: userData.email,
-        profileImageUrl: '/images/hero-bg.jpg', // You can update this later
-        role: userData.role, // Use the role from the backend
+        profileImageUrl: '/images/hero-bg.jpg',
+        role: userData.role,
       });
 
-      // --- Redirect based on the REAL role from the backend ---
       if (userData.role === 'Organizer') {
         router.push('/organizer/dashboard');
       } else {
@@ -47,7 +43,7 @@ const LoginPage = () => {
     }
   };
 
-  // --- 3. YOUR ENTIRE UI REMAINS EXACTLY THE SAME ---
+  // --- 2. THE UI IS CLEANED UP BY REMOVING THE DROPDOWN ---
   return (
       <div className="flex items-center justify-center min-h-screen bg-black">
         <div className="w-full max-w-md p-8 space-y-6 bg-[#121212] rounded-2xl shadow-lg border border-white/10">
@@ -79,19 +75,9 @@ const LoginPage = () => {
                   className="w-full mt-1 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-300">Login as</label>
-              <select
-                  id="role"
-                  name="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full mt-1 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="participant">Participant</option>
-                <option value="organizer">Organizer</option>
-              </select>
-            </div>
+
+            {/* The "Login as" dropdown has been removed */}
+
             {error && <p className="text-sm text-red-500 text-center">{error}</p>}
             <div>
               <button

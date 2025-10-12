@@ -3,9 +3,15 @@
 
 import { useState, useEffect } from 'react';
 import useUserStore from '@/stores/useUserStore';
-import { getMyEvents } from '@/lib/api'; // <-- 1. Import our new function
+import { getMyEvents, getRecentActivities } from '@/lib/api';
 
-// Your RecentActivityItem component is preserved exactly as it was
+interface IActivity {
+  _id: string;
+  message: string;
+  type: 'ticket' | 'event' | 'payment';
+  createdAt: string;
+}
+
 const RecentActivityItem = ({ type, description, time }: { type: 'ticket' | 'event' | 'payment'; description: string; time: string; }) => {
   let icon;
   let iconColor;
@@ -30,31 +36,39 @@ const RecentActivityItem = ({ type, description, time }: { type: 'ticket' | 'eve
   );
 };
 
+const timeAgo = (date: string) => {
+  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
+
 
 const DashboardPage = () => {
   const { fullName } = useUserStore();
-
-  // 2. Add state for our live dashboard data
-  const [stats, setStats] = useState({
-    totalTicketsSold: 0,
-    activeEvents: 0,
-    totalRevenue: 0,
-  });
+  const [stats, setStats] = useState({ totalTicketsSold: 0, activeEvents: 0, totalRevenue: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [recentActivities, setRecentActivities] = useState<IActivity[]>([]);
 
-  // 3. Fetch data from the backend when the page loads
   useEffect(() => {
     const fetchOrganizerData = async () => {
       try {
-        const myEvents = await getMyEvents();
+        const [myEvents, activities] = await Promise.all([
+          getMyEvents(),
+          getRecentActivities()
+        ]);
 
-        // Calculate stats from the live data
         const totalTicketsSold = myEvents.reduce((acc: number, event: any) => acc + event.ticketsSold, 0);
         const activeEvents = myEvents.length;
         const totalRevenue = myEvents.reduce((acc: number, event: any) => acc + (event.ticketsSold * event.ticketPrice), 0);
 
         setStats({ totalTicketsSold, activeEvents, totalRevenue });
+        setRecentActivities(activities);
 
       } catch (err) {
         console.error("Failed to fetch organizer data:", err);
@@ -66,17 +80,8 @@ const DashboardPage = () => {
     fetchOrganizerData();
   }, []);
 
-  // For now, recent activities remain as mock data
-  const recentActivities = [
-    { type: 'ticket', description: "Ticket purchased for 'Summer Music Fest'", time: '2 hours ago' },
-    { type: 'event', description: "New event 'Tech Conference 2024' created", time: 'Yesterday' },
-    // ... more mock data
-  ];
-
-  // Helper to format currency
   const formatCurrency = (amount: number) => `₹${new Intl.NumberFormat('en-IN').format(amount)}`;
 
-  // 4. YOUR ENTIRE UI REMAINS EXACTLY THE SAME, but uses the new 'stats' state
   return (
       <div className="bg-black min-h-screen text-white">
         <div className="container mx-auto px-4 lg:px-20 py-12">
@@ -90,6 +95,7 @@ const DashboardPage = () => {
           ) : error ? (
               <p className="text-center text-red-500">{error}</p>
           ) : (
+              // --- THIS IS THE CORRECTED STATS GRID ---
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <div className="bg-[#121212] p-6 rounded-2xl border border-white/10 shadow-lg text-center">
                   <p className="text-gray-400 text-lg mb-2">Total Tickets Sold</p>
@@ -108,9 +114,20 @@ const DashboardPage = () => {
 
           <h2 className="text-3xl font-bold mb-6 font-spectral">Recent Activities</h2>
           <div className="bg-[#121212] rounded-2xl border border-white/10 shadow-lg overflow-hidden">
-            {recentActivities.map((activity, index) => (
-                <RecentActivityItem key={index} {...activity} />
-            ))}
+            {isLoading ? (
+                <p className="text-center text-gray-400 p-8">Loading activities...</p>
+            ) : recentActivities.length === 0 ? (
+                <p className="text-center text-gray-400 p-8">No recent activities to show.</p>
+            ) : (
+                recentActivities.map((activity) => (
+                    <RecentActivityItem
+                        key={activity._id}
+                        type={activity.type}
+                        description={activity.message}
+                        time={timeAgo(activity.createdAt)}
+                    />
+                ))
+            )}
           </div>
         </div>
       </div>

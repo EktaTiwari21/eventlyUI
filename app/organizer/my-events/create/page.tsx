@@ -4,7 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageUploader from '@/components/ImageUploader';
-import { createEvent } from '@/lib/api';
+import ImageSuggestionModal from '@/components/ImageSuggestionModal'; // <-- 1. IMPORT THE NEW MODAL
+import { createEvent, suggestImages, generateImage } from '@/lib/api'; // <-- 2. IMPORT generateImage
 
 const CreateEventPage = () => {
   const [formData, setFormData] = useState({
@@ -14,11 +15,19 @@ const CreateEventPage = () => {
     date: '',
     time: '',
     price: '',
-    capacity: '', // <-- 1. ADD 'capacity' TO OUR FORM STATE
+    capacity: '',
     imageUrl: '',
   });
   const [error, setError] = useState('');
   const router = useRouter();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [suggestedImages, setSuggestedImages] = useState<any[]>([]); // Use 'any' to handle Unsplash's complex object
+  const [isSuggesting, setIsSuggesting] = useState(false);
+
+  // --- ADD STATE FOR THE IMAGE GENERATION ---
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -46,8 +55,8 @@ const CreateEventPage = () => {
       location: formData.location,
       date: eventDateTime.toISOString(),
       ticketPrice: Number(formData.price) || 0,
-      capacity: Number(formData.capacity), // <-- 2. ADD 'capacity' TO THE SUBMITTED DATA
-      eventImage: formData.imageUrl, // <-- 3. FIX THE FIELD NAME from 'imageUrl' to 'eventImage'
+      capacity: Number(formData.capacity),
+      eventImage: formData.imageUrl,
     };
 
     try {
@@ -55,7 +64,6 @@ const CreateEventPage = () => {
       alert('Event created successfully!');
       router.push('/organizer/my-events');
     } catch (err: any) {
-      // The black box recorder is preserved for future debugging
       console.error("--- EVENT CREATION FAILED ---");
       if (err.response) {
         console.error("Error Data:", err.response.data);
@@ -72,15 +80,58 @@ const CreateEventPage = () => {
     }
   };
 
-  // --- 4. YOUR UI IS PRESERVED, WITH THE NEW 'CAPACITY' FIELD ADDED ---
+  const handleSuggestImages = async () => {
+    if (!formData.title) {
+      alert("Please enter an event title first to get suggestions.");
+      return;
+    }
+    setIsSuggesting(true);
+    setIsModalOpen(true);
+    try {
+      const images = await suggestImages(formData.title);
+      setSuggestedImages(images);
+    } catch (error) {
+      console.error("Failed to suggest images:", error);
+      alert("Could not fetch image suggestions. Please try again.");
+      setIsModalOpen(false);
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const handleSelectSuggestedImage = (imageUrl: string) => {
+    setFormData(prevState => ({ ...prevState, imageUrl }));
+    setIsModalOpen(false);
+  };
+
+  // --- NEW FUNCTION TO HANDLE AI GENERATION ---
+  const handleGenerateImage = async () => {
+    if (!prompt) {
+      alert("Please enter a prompt to generate an image.");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const result = await generateImage(prompt);
+      // Set the newly generated image URL in the form
+      setFormData(prevState => ({ ...prevState, imageUrl: result.imageUrl }));
+    } catch (error) {
+      console.error("Failed to generate image:", error);
+      alert("Could not generate image. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+
   return (
       <div className="bg-black min-h-screen text-white">
         <div className="container mx-auto px-4 lg:px-20 py-12">
           <h1 className="text-4xl font-bold mb-8 font-spectral">Create a New Event</h1>
 
           <form onSubmit={handleSubmit} className="bg-[#121212] p-8 rounded-2xl space-y-6">
+            {/* All other form fields are unchanged */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ... Title and Location fields unchanged ... */}
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">Event Title</label>
                 <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} placeholder="Enter the title of your event" className="w-full bg-black/20 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
@@ -108,13 +159,14 @@ const CreateEventPage = () => {
                 <input type="number" name="price" id="price" min="0" value={formData.price} onChange={handleChange} placeholder="0 for free event" className="w-full bg-black/20 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
               </div>
             </div>
-            {/* --- NEW CAPACITY FIELD --- */}
             <div>
               <label htmlFor="capacity" className="block text-sm font-medium text-gray-300 mb-2">Capacity (Max Tickets)</label>
               <input type="number" name="capacity" id="capacity" min="1" value={formData.capacity} onChange={handleChange} placeholder="e.g., 500" className="w-full bg-black/20 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
             </div>
+
+            {/* --- THIS IS THE NEW "IMAGE ASSISTANT" SECTION --- */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Upload Image or Banner</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Event Banner</label>
               <div className="bg-black/20 border border-dashed border-white/20 rounded-lg p-6">
                 <ImageUploader
                     onImageSelect={handleImageSelect}
@@ -123,7 +175,41 @@ const CreateEventPage = () => {
                     buttonText="Upload Banner"
                 />
               </div>
+
+              <div className="text-center mt-2">
+                <button
+                    type="button"
+                    onClick={handleSuggestImages}
+                    disabled={!formData.title || isSuggesting}
+                    className="text-sm text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSuggesting ? 'Searching...' : '✨ Suggest Images based on Title'}
+                </button>
+              </div>
+
+              <div className="mt-6">
+                <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-300 mb-2">Or, Generate a New Image with AI</label>
+                <div className="flex gap-2">
+                  <input
+                      type="text"
+                      id="ai-prompt"
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder="e.g., A vibrant, modern concert stage with blue lights"
+                      className="w-full bg-black/20 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <button
+                      type="button"
+                      onClick={handleGenerateImage}
+                      disabled={!prompt || isGenerating}
+                      className="bg-white text-black font-bold py-3 px-6 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    {isGenerating ? 'Generating...' : 'Generate'}
+                  </button>
+                </div>
+              </div>
             </div>
+
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <div className="flex justify-end items-center gap-4 pt-4">
               <button
@@ -139,6 +225,14 @@ const CreateEventPage = () => {
             </div>
           </form>
         </div>
+
+        <ImageSuggestionModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            images={suggestedImages}
+            onSelect={handleSelectSuggestedImage}
+            isLoading={isSuggesting}
+        />
       </div>
   );
 };
